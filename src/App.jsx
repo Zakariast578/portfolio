@@ -33,6 +33,10 @@ function App() {
           <footer className="py-10 mt-12 border-t border-white/10 bg-gradient-to-t from-black/80 via-gray-900/60 to-transparent text-center">
             <p className="text-gray-400 text-base tracking-wide">
               © {new Date().getFullYear()} ZakariaSaid.dev. All rights reserved.
+              <br />
+              <span className="text-xs text-gray-500">
+                Built with React + Vite | Deployed Successfully
+              </span>
             </p>
           </footer>
         </RevealOnScroll>
