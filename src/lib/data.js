@@ -132,7 +132,7 @@ export const projectsData = [
 export const contactInfo = {
   email: 'info@zakariasaid.dev',
   location: 'Available Worldwide',
-  responseTime: 'Within 24 hours',
+  responseTime: 'Within 24/7 hours',
   availabilityTag: 'Open to opportunities',
 };
 
