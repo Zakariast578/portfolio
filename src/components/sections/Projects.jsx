@@ -1,81 +1,140 @@
-import { RevealOnScroll } from "../RevealOnScroll.jsx";
+import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { Github, ArrowUpRight, Construction } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { projectsData, projectImageMap } from "@/lib/data";
+
+const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.15 } } };
+const itemVariants = { hidden: { y: 28, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 120, damping: 16 } } };
+
+const ProjectCard = ({ project }) => {
+  const isPending = project.status === "In Progress";
+
+  return (
+    <motion.div variants={itemVariants} whileHover={{ scale: 1.03, transition: { duration: 0.2 } }} className="h-full">
+      <Card className={`h-full flex flex-col overflow-hidden transition-all duration-300 border-slate-800/70 bg-slate-900/60 backdrop-blur hover:border-sky-500/50 hover:shadow-lg ${isPending ? 'border-dashed' : ''}`}>
+        <CardHeader>
+          <div className="relative mb-4">
+            <div className={`group aspect-video rounded-lg border border-slate-800 bg-slate-800/40 overflow-hidden ${isPending ? 'grayscale' : ''}`}> 
+              {project.image ? (
+                <img
+                  src={project.image}
+                  alt={`${project.title} screenshot`}
+                  className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(.4,0,.2,1)] group-hover:scale-105"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
+                  <Construction className="w-12 h-12 mb-2" />
+                  <p>Image Coming Soon</p>
+                </div>
+              )}
+            </div>
+            <Badge className={`absolute top-2 right-2 border ${isPending ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'}`}>
+              {project.status}
+            </Badge>
+          </div>
+          <CardTitle className="text-xl font-bold">{project.title}</CardTitle>
+          <CardDescription className="text-base min-h-[3em] text-slate-300">
+            {project.description}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex-grow">
+          <div className="flex flex-wrap gap-2">
+            {project.tags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="bg-slate-800/70 text-slate-300 border-slate-700 hover:bg-sky-500/20 hover:text-sky-300 transition-colors">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-start gap-4 pt-4">
+          {project.liveLink && (
+            <Button asChild>
+              <a
+                href={project.liveLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`View live demo of ${project.title}`}
+              >
+                View Demo <ArrowUpRight className="ml-2 h-4 w-4" />
+              </a>
+            </Button>
+          )}
+          {project.githubLink && (
+            <Button variant="outline" asChild>
+              <a
+                href={project.githubLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`View GitHub repository for ${project.title}`}
+              >
+                <Github className="mr-2 h-4 w-4" /> GitHub
+              </a>
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
+    </motion.div>
+  );
+};
 
 export const Projects = () => {
-  return (
-    <section
-      id="projects"
-      className="min-h-screen flex items-center justify-center py-20"
-    >
-      <RevealOnScroll>
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-8 bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent text-center">
-            {" "}
-            Featured Projects
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-6 rounded-xl border border-white/10 hover:-translate-y-1 hover:border-blue-500/30 hover:shadow-[0_2px_8px_rgba(59,130,246,0.2)] transition">
-              <h3 className="text-xl font-bold mb-2">
-                Somali TalentLink Platform
-              </h3>
-              <p className="text-gray-400 mb-4">
-                A local job and gig platform that connects Somali youth with
-                employment opportunities.
-              </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {["React", "Django", "TailwindCSS", "PostgreSQL"].map((tech) => (
-                  <span
-                    key={tech}
-                    className="bg-blue-500/10 text-blue-500 py-1 px-3 rounded-full text-sm hover:bg-blue-500/20 hover:shadow-[0_2px_8px_rgba(59,130,246,0.1)] transition-all"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
+  const [activeTab, setActiveTab] = useState("all");
+  const [images, setImages] = useState({});
+  const loadedRef = useRef(false);
 
-              <div className="flex justify-between items-center">
-                <a
-                  href="#"
-                  className="text-blue-400 hover:text-blue-300 transition-colors my-4"
-                >
-                  View Project →
-                </a>
-              </div>
-            </div>
-            <div
-              className="
-              glass p-6 rounded-xl border border-white/10 
-              hover:-translate-y-1 hover:border-blue-500/30
-              hover:shadow-[0_4px_20px_rgba(59,130,246,0.1)]
-              transition-all
-            "
-            >
-              <h3 className="text-xl font-bold mb-2">Portfolio Website</h3>
-              <p className="text-gray-400 mb-4">
-                My personal developer portfolio showcasing skills, projects, and
-                contact details.
-              </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {["React", "TailwindCSS", "Framer Motion"].map((tech) => (
-                  <span
-                    key={tech}
-                    className="bg-blue-500/10 text-blue-500 py-1 px-3 rounded-full text-sm hover:bg-blue-500/20 hover:shadow-[0_2px_8px_rgba(59,130,246,0.1)] transition-all"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
-              <div className="flex justify-between items-center">
-                <a
-                  href="#"
-                  className="text-blue-400 hover:text-blue-300 transition-colors my-4"
-                >
-                  View Project →
-                </a>
-              </div>
-            </div>
-          </div>
+  useEffect(() => {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+    (async () => {
+      const entries = await Promise.all(
+        projectsData.map(async (p) => {
+          if (p.imageKey && projectImageMap[p.imageKey]) {
+            try {
+              const mod = await projectImageMap[p.imageKey]();
+              return [p.title, mod.default];
+            } catch {
+              return [p.title, null];
+            }
+          }
+          return [p.title, null];
+        })
+      );
+      setImages(Object.fromEntries(entries));
+    })();
+  }, []);
+
+  const filteredProjects = projectsData
+    .map((p) => ({ ...p, image: images[p.title] }))
+    .filter((project) => {
+      if (activeTab === "all") return true;
+      return project.status.toLowerCase().replace(" ", "-") === activeTab;
+    });
+
+  return (
+    <section id="projects" className="relative w-full py-24 bg-background">
+      <div className="absolute inset-0 pointer-events-none opacity-40 [mask-image:radial-gradient(circle_at_center,rgba(0,0,0,0),rgba(0,0,0,0.85))] bg-accent/30" aria-hidden="true" />
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="text-center mb-14">
+          <h2 className="text-4xl md:text-5xl font-bold text-primary">Projects & Case Studies</h2>
+          <p className="mt-4 text-lg text-foreground/80 max-w-2xl mx-auto">A selection of work highlighting product thinking, technical breadth and attention to UX detail.</p>
         </div>
-      </RevealOnScroll>
+        <Tabs defaultValue="all" onValueChange={setActiveTab} className="w-full mb-10">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 bg-background/60 backdrop-blur border border-accent/40">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="complete">Complete</TabsTrigger>
+            <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <motion.div key={activeTab} variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {filteredProjects.map((project) => (
+            <ProjectCard key={project.title} project={project} />
+          ))}
+        </motion.div>
+      </div>
     </section>
   );
 };
