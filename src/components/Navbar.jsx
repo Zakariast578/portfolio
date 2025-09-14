@@ -20,29 +20,59 @@ const Navbar = () => {
     const [hovered, setHovered] = useState(null);
     const observersRef = useRef([]);
 
-    // Scroll listener (background transition)
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 24);
         window.addEventListener("scroll", onScroll, { passive: true });
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
-    // Smooth scroll
+    // Smooth scroll + optimistic active update
     const handleNavClick = (e, href) => {
         e.preventDefault();
         const el = document.querySelector(href);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        const id = href.startsWith("#") ? href.slice(1) : href;
+        if (id) setActive(id);
     };
 
-    // Active section observer
+    // Improved active section detection using intersection ratios
     useEffect(() => {
-        const options = { root: null, rootMargin: "-40% 0px -55% 0px", threshold: 0 };
-        const callback = (entries) => {
-            entries.forEach((entry) => entry.isIntersecting && setActive(entry.target.id));
+        const sectionIds = navLinks.map((l) => l.id);
+        const thresholds = Array.from({ length: 101 }, (_, i) => i / 100); // 0 -> 1 step 0.01
+        const options = {
+            root: null,
+            rootMargin: "0px 0px -30% 0px", // avoid activating next section too early
+            threshold: thresholds,
         };
+
+        const visibility = Object.create(null);
+
+        const callback = (entries) => {
+            let changed = false;
+            entries.forEach((entry) => {
+                if (sectionIds.includes(entry.target.id)) {
+                    visibility[entry.target.id] = entry.intersectionRatio;
+                    changed = true;
+                }
+            });
+            if (changed) {
+                let bestId = sectionIds[0];
+                let bestRatio = -1;
+                for (const id of sectionIds) {
+                    const r = visibility[id] ?? 0;
+                    if (r > bestRatio) {
+                        bestRatio = r;
+                        bestId = id;
+                    }
+                }
+                // Only update if actually different
+                setActive((prev) => (prev === bestId ? prev : bestId));
+            }
+        };
+
         const io = new IntersectionObserver(callback, options);
-        navLinks.forEach((l) => {
-            const node = document.getElementById(l.id);
+        sectionIds.forEach((id) => {
+            const node = document.getElementById(id);
             if (node) io.observe(node);
         });
         observersRef.current.push(io);
@@ -75,32 +105,32 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-8">
                 <div className="flex h-16 items-center justify-between gap-6">
                     {/* Branding */}
-                        <a
-                            href="#hero"
-                            onClick={(e) => handleNavClick(e, "#hero")}
-                            aria-label="Go to Hero section"
-                            className="group flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[--accent] rounded-full"
-                            style={{ ["--accent"]: ACCENT }}
-                        >
-                            <div className="relative">
-                                <Avatar className="h-10 w-10 ring-2 ring-slate-700 group-hover:ring-[--accent] transition-colors duration-300">
-                                    <AvatarImage src="/logo.png" alt="Logo" />
-                                    <AvatarFallback className="bg-slate-800 text-[--accent] font-semibold">
-                                        DZ
-                                    </AvatarFallback>
-                                </Avatar>
-                                <motion.span
-                                    layout
-                                    aria-hidden="true"
-                                    className="pointer-events-none absolute inset-0 rounded-full"
-                                    whileHover={{ scale: 1.08 }}
-                                    transition={{ type: "spring", stiffness: 220, damping: 16 }}
-                                />
-                            </div>
-                            <span className="font-semibold text-lg tracking-tight text-white">
-                                Dev<span style={{ color: ACCENT }}>Zakaria</span>
-                            </span>
-                        </a>
+                    <a
+                        href="#hero"
+                        onClick={(e) => handleNavClick(e, "#hero")}
+                        aria-label="Go to Hero section"
+                        className="group flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-[--accent] rounded-full"
+                        style={{ ["--accent"]: ACCENT }}
+                    >
+                        <div className="relative">
+                            <Avatar className="h-10 w-10 ring-2 ring-slate-700 group-hover:ring-[--accent] transition-colors duration-300">
+                                <AvatarImage src="/logo.png" alt="Logo" />
+                                <AvatarFallback className="bg-slate-800 text-[--accent] font-semibold">
+                                    DZ
+                                </AvatarFallback>
+                            </Avatar>
+                            <motion.span
+                                layout
+                                aria-hidden="true"
+                                className="pointer-events-none absolute inset-0 rounded-full"
+                                whileHover={{ scale: 1.08 }}
+                                transition={{ type: "spring", stiffness: 220, damping: 16 }}
+                            />
+                        </div>
+                        <span className="font-semibold text-lg tracking-tight text-white">
+                            Dev<span style={{ color: ACCENT }}>Zakaria</span>
+                        </span>
+                    </a>
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-1" aria-label="Section links">
@@ -140,7 +170,7 @@ const Navbar = () => {
                                             )}
                                         </AnimatePresence>
 
-                                        {/* Accent underline (hover or active) */}
+                                        {/* Accent underline */}
                                         <AnimatePresence>
                                             {(hovered === link.id || isActive) && (
                                                 <motion.span
