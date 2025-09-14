@@ -32,15 +32,22 @@ export const socialLinks = [
 ];
 
 export const heroContent = {
-  badge: 'Full-Stack & Data Science',
-  name: "I'm\nZakaria Said",
-  title: 'Architecting Digital Solutions, Driven by Data',
-  intro:
-    'I specialize in building robust, scalable web applications and leveraging data to drive intelligent insights and features.',
-  ctas: [
-    { label: 'View My Work', href: '#projects', primary: true },
-    { label: 'Get In Touch', href: '#contact', primary: false },
+  badge: "Full-Stack • Data • AI",
+  roles: [
+    "Data Scientist ",
+    2200,
+    "AI & ML Enthusiast",
+    2000,
+    "MERN Developer",
+    2400,
   ],
+  intro:
+    "I craft intelligent, scalable applications that merge data science, modern web engineering, and AI-driven experiences to deliver measurable impact.",
+  ctas: [
+    { label: "View My Work", href: "#projects", primary: true },
+    { label: "Contact Me", href: "#contact", primary: false },
+  ],
+  name: "Zakaria Said",
 };
 
 export const skillsData = [
